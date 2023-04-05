@@ -1,10 +1,14 @@
 package com.mindmorphosis.protoc.gen.http;
 
+import com.google.api.HttpRule;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.compiler.PluginProtos;
+import com.google.api.AnnotationsProto;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class PluginMain {
     public static void main(String[] args) {
@@ -72,11 +76,23 @@ public class PluginMain {
             content.append("@ResponseBody\n");
             content.append("@RestController\n");
             content.append("public class").append(" ").append(fileDescriptor.getFullName().split("\\.")[0]).append("Controller ").append("{\n");
+
             // genAutowired
             for (Descriptors.ServiceDescriptor services : fileDescriptor.getServices()){
                 content.append(genAutowired(services)).append("\n");
             }
-            content.append("}\n");
+
+            // controller method
+
+            for (Descriptors.ServiceDescriptor services : fileDescriptor.getServices()){
+                for (Descriptors.MethodDescriptor method : services.getMethods()){
+                    method.getOptions().getExtension(AnnotationsProto.http);
+
+                    // TODO
+
+                }
+            }
+            content.append("\n}");
         }
         return content.toString();
     }
