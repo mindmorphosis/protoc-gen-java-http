@@ -1,7 +1,7 @@
 package  my_package;
 
 import org.springframework.web.bind.annotation.*;
-import my_package;
+import my_package.*;
 
 interface a_Service {
     pong function1 ( ping ping );
@@ -23,5 +23,12 @@ public class tController {
 
     @Autowired
     b_Service b;
+
+   @PutMapping("/ping1")
+   @PostMapping("/ping2")
+   @GetMapping("/ping3")
+   @GetMapping("/ping11")
+   @PutMapping("/ping22")
+   @DeleteMapping("/ping33")
 
 }

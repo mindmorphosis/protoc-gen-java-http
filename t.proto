@@ -6,12 +6,12 @@ import "google/api/annotations.proto";
 service a{
   rpc function1 (ping) returns (pong) {
     option(google.api.http) = {
-      get: "/ping1"
+      put: "/ping1"
     };
   }
   rpc function2 (ping) returns (pong) {
     option(google.api.http) = {
-      get: "/ping2"
+      post: "/ping2"
     };
   }
   rpc function3 (ping) returns (pong) {
@@ -28,12 +28,12 @@ service b{
   }
   rpc function2 (ping) returns (pong) {
     option(google.api.http) = {
-      get: "/ping22"
+      put: "/ping22"
     };
   }
   rpc function3 (ping) returns (pong) {
     option(google.api.http) = {
-      get: "/ping33"
+      delete: "/ping33"
     };
   }
 }

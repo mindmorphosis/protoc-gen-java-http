@@ -3,6 +3,7 @@ package com.mindmorphosis.protoc.gen.http;
 import com.google.api.HttpRule;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.compiler.PluginProtos;
 import com.google.api.AnnotationsProto;
@@ -13,7 +14,9 @@ import java.util.Map;
 public class PluginMain {
     public static void main(String[] args) {
         try {
-            PluginProtos.CodeGeneratorRequest request = PluginProtos.CodeGeneratorRequest.parseFrom(System.in);
+            ExtensionRegistry extensionRegistry = ExtensionRegistry.newInstance();
+            extensionRegistry.add(AnnotationsProto.http);
+            PluginProtos.CodeGeneratorRequest request = PluginProtos.CodeGeneratorRequest.parseFrom(System.in, extensionRegistry);
             PluginProtos.CodeGeneratorResponse.Builder responseBuilder = PluginProtos.CodeGeneratorResponse.newBuilder();
 
             for (String fileToGenerate : request.getFileToGenerateList()) {
@@ -59,7 +62,7 @@ public class PluginMain {
 
             // import package
             content.append("import org.springframework.web.bind.annotation.*;\n");
-            content.append("import ").append(fileDescriptor.getPackage()).append(";\n\n");
+            content.append("import ").append(fileDescriptor.getPackage()).append(".*;\n\n");
 
             // serviceInterface
             for (Descriptors.ServiceDescriptor services : fileDescriptor.getServices()){
@@ -83,13 +86,21 @@ public class PluginMain {
             }
 
             // controller method
-
             for (Descriptors.ServiceDescriptor services : fileDescriptor.getServices()){
                 for (Descriptors.MethodDescriptor method : services.getMethods()){
-                    method.getOptions().getExtension(AnnotationsProto.http);
-
-                    // TODO
-
+                    HttpRule rule = method.getOptions().getExtension(AnnotationsProto.http);
+                    //gen http annotate
+                    String annotate = "   @%sMapping(\"%s\")";
+                    if(!rule.getGet().equals("")){
+                        annotate = String.format(annotate, "Get", rule.getGet());
+                    }else if (!rule.getDelete().equals("")){
+                        annotate = String.format(annotate, "Delete", rule.getDelete());
+                    }else if (!rule.getPost().equals("")){
+                        annotate = String.format(annotate, "Post", rule.getPost());
+                    }else if(!rule.getPut().equals("")){
+                        annotate = String.format(annotate, "Put", rule.getPut());
+                    }
+                    content.append(annotate).append("\n");
                 }
             }
             content.append("\n}");
