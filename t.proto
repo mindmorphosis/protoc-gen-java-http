@@ -3,45 +3,30 @@ syntax = "proto3";
 package my_package;
 import "google/api/annotations.proto";
 
-service a{
-  rpc function1 (ping) returns (pong) {
-    option(google.api.http) = {
-      put: "/ping1"
-    };
-  }
-  rpc function2 (ping) returns (pong) {
-    option(google.api.http) = {
-      post: "/ping2"
-    };
-  }
-  rpc function3 (ping) returns (pong) {
-    option(google.api.http) = {
-      get: "/ping3"
-    };
-  }
-}
 service b{
-  rpc function1 (ping) returns (pong) {
+  rpc function1 (Ping) returns (Pong) {
     option(google.api.http) = {
       get: "/ping11"
     };
   }
-  rpc function2 (ping) returns (pong) {
+  rpc function2 (Ping) returns (Pong) {
     option(google.api.http) = {
       put: "/ping22"
     };
   }
-  rpc function3 (ping) returns (pong) {
+  rpc function3 (Ping) returns (Pong) {
     option(google.api.http) = {
-      delete: "/ping33"
+      delete: "/{aaa}"
     };
   }
 }
 
-message ping {
-  int32 name = 1;
+message Ping {
+  int32 aaa = 1;
+  int32 name1 = 2;
+  int32 bbb = 3;
 }
 
-message pong {
-  int32 name = 1;
+message Pong {
+  int32 name2 = 1;
 }

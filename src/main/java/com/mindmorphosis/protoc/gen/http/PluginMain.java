@@ -4,12 +4,14 @@ import com.google.api.HttpRule;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.ExtensionRegistry;
-import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.compiler.PluginProtos;
 import com.google.api.AnnotationsProto;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PluginMain {
     public static void main(String[] args) {
@@ -58,7 +60,8 @@ public class PluginMain {
         if(!fileDescriptor.getPackage().isEmpty()){
 
             // package packageName;
-            content.append("package  ").append(fileDescriptor.getPackage()).append(";\n\n");
+            String packageGen = String.format("package %s;\n\n",fileDescriptor.getPackage());
+            content.append(packageGen);
 
             // import package
             content.append("import org.springframework.web.bind.annotation.*;\n");
@@ -70,7 +73,7 @@ public class PluginMain {
                 content.append("interface ").append(serviceName).append(" {\n");
                 // type method
                 for (Descriptors.MethodDescriptor method : services.getMethods()){
-                    content.append("    ").append(genMethod(method)).append(";\n");
+                    content.append("    ").append(genInterfaceMethod(method));
                 }
                 content.append("}\n\n");
             }
@@ -90,7 +93,7 @@ public class PluginMain {
                 for (Descriptors.MethodDescriptor method : services.getMethods()){
                     HttpRule rule = method.getOptions().getExtension(AnnotationsProto.http);
                     //gen http annotate
-                    String annotate = "   @%sMapping(\"%s\")";
+                    String annotate = "    @%sMapping(\"%s\")";
                     if(!rule.getGet().equals("")){
                         annotate = String.format(annotate, "Get", rule.getGet());
                     }else if (!rule.getDelete().equals("")){
@@ -108,23 +111,55 @@ public class PluginMain {
         return content.toString();
     }
 
-    private static String genMethod(Descriptors.MethodDescriptor m) {
-        StringBuilder method = new StringBuilder();
-        method.append(m.getOutputType().getName()).append(" ").append(m.getName()).append(" ")
-                .append("( ").append(m.getInputType().getName()).append(" ").append(m.getInputType().getName())
-                .append(" )");
-        return String.valueOf(method);
+    // 生成方法
+    private static String genInterfaceMethod(Descriptors.MethodDescriptor m) {
+        String url = getMethodUrl(m);
+        StringBuilder parameterList = new StringBuilder();
+        if (!url.equals("")){
+            Pattern pattern = Pattern.compile("\\{([^}]*)\\}");
+            Matcher matcher = pattern.matcher(url);
+            while (matcher.find()){
+                String parameterName = matcher.group(1);
+                for (Descriptors.FieldDescriptor field : m.getInputType().getFields()) {
+                    if (field.getName().equals(parameterName)){
+                        if (parameterList.length()!=0){
+                            parameterList.append(", ");
+                        }
+                        parameterList.append(field.getType().getJavaType().toString().toLowerCase()).append(" ").append(field.getName());
+                    }
+                }
+            }
+        }
+        if(parameterList.length()!=0){
+            parameterList.append(", ");
+        }
+        parameterList.append(m.getInputType().getName()).append(" ").append(m.getInputType().getName().toLowerCase());
+        return String.format("    %s %s ( %s );\n", m.getOutputType().getName(), m.getName(), parameterList) + "\n";
     }
 
     private static String genAutowired(Descriptors.ServiceDescriptor services){
-        StringBuilder content = new StringBuilder();
-        String serviceName = genServiceName(services.getName());
-        content.append("    ").append("@Autowired\n")
-                .append("    ").append(serviceName).append(" ").append(services.getName()).append(";\n");
-        return String.valueOf(content);
+        return String.format("    @Autowired\n    %s;\n",genServiceName(services.getName()));
     }
 
     private static String genServiceName(String name){
         return name+"_Service";
+    }
+
+    // 获取rpc方法中的url参数
+    private static String getMethodUrl(Descriptors.MethodDescriptor m) {
+        HttpRule rule = m.getOptions().getExtension(AnnotationsProto.http);
+        if (!rule.getPut().equals("")) {
+            return rule.getPut();
+        }
+        if (!rule.getPost().equals("")) {
+            return rule.getPost();
+        }
+        if (!rule.getGet().equals("")) {
+            return rule.getGet();
+        }
+        if (!rule.getDelete().equals("")) {
+            return rule.getDelete();
+        }
+        return "";
     }
 }
