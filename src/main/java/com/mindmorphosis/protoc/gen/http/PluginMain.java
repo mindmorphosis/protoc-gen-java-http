@@ -106,7 +106,7 @@ public class PluginMain {
                     content.append(annotate).append("\n");
                     // gen http method
                     content.append(String.format("    public %s %s ( %s ) {\n",method.getOutputType().getName(), method.getName(), genMethodParameterList(method)));
-                    content.append(String.format("        return %s.%s",genServiceName(services.getName()), method.getName()))
+                    content.append(String.format("        return %s.%s",genServiceName(services.getName()).toLowerCase(), method.getName()))
                             .append(String.format("( %s )",genMethodServiceReturnParameterList(method))).append(";\n");
                     content.append("    }\n");
                 }
@@ -172,7 +172,7 @@ public class PluginMain {
     }
 
     private static String genAutowired(Descriptors.ServiceDescriptor services){
-        return String.format("    @Autowired\n    %s;\n",genServiceName(services.getName()));
+        return String.format("    @Autowired\n    %s %s;\n",genServiceName(services.getName()),genServiceName(services.getName()).toLowerCase());
     }
 
     private static String genServiceName(String name){
