@@ -8,10 +8,10 @@ import com.google.protobuf.compiler.PluginProtos;
 import com.google.api.AnnotationsProto;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.mindmorphosis.protoc.gen.http.StringUtil.StringUtil.toPascalCase;
 
 public class PluginMain {
     public static void main(String[] args) {
@@ -92,7 +92,7 @@ public class PluginMain {
             for (Descriptors.ServiceDescriptor services : fileDescriptor.getServices()){
                 for (Descriptors.MethodDescriptor method : services.getMethods()){
                     HttpRule rule = method.getOptions().getExtension(AnnotationsProto.http);
-                    //gen http annotate
+                    // gen http annotate
                     String annotate = "    @%sMapping(\"%s\")";
                     if(!rule.getGet().equals("")){
                         annotate = String.format(annotate, "Get", rule.getGet());
@@ -104,6 +104,11 @@ public class PluginMain {
                         annotate = String.format(annotate, "Put", rule.getPut());
                     }
                     content.append(annotate).append("\n");
+                    // gen http method
+                    content.append(String.format("    public %s %s ( %s ) {\n",method.getOutputType().getName(), method.getName(), genMethodParameterList(method)));
+                    content.append(String.format("        return %s.%s",genServiceName(services.getName()), method.getName()))
+                            .append(String.format("( %s )",genMethodServiceReturnParameterList(method))).append(";\n");
+                    content.append("    }\n");
                 }
             }
             content.append("\n}");
@@ -111,8 +116,37 @@ public class PluginMain {
         return content.toString();
     }
 
-    // 生成方法
+    private static String genMethodServiceReturnParameterList(Descriptors.MethodDescriptor m) {
+        String[] list = genInterfaceMethodParameterList(m).split(",");
+        StringBuilder parameterList = new StringBuilder();
+        for (int i = 0; i < list.length - 1; i++) {
+            parameterList.append(list[i].split(" ")[1]).append(",");
+        }
+        parameterList.append(list[list.length-1].split(" ")[1]);
+        return String.valueOf(parameterList);
+    }
+
+    private static String genMethodParameterList(Descriptors.MethodDescriptor m) {
+        StringBuilder parameter = new StringBuilder();
+        String[] parameterList = genInterfaceMethodParameterList(m).split(",");
+        if(parameterList.length == 1){
+            return "@RequestBody "+parameterList[0];
+        }else {
+            for (int i = 0; i < parameterList.length-1; i++) {
+                parameter.append("@PathVariable ").append(parameterList[i]).append(",");
+            }
+        }
+        parameter.append("@RequestBody ").append(parameterList[parameterList.length - 1]);
+        return String.valueOf(parameter);
+    }
+
+    // 生成接口
     private static String genInterfaceMethod(Descriptors.MethodDescriptor m) {
+        return String.format("    %s %s ( %s );\n", toPascalCase(m.getOutputType().getName()), m.getName(), genInterfaceMethodParameterList(m)) + "\n";
+    }
+
+    // 生成参数列表
+    private static String genInterfaceMethodParameterList(Descriptors.MethodDescriptor m){
         String url = getMethodUrl(m);
         StringBuilder parameterList = new StringBuilder();
         if (!url.equals("")){
@@ -123,7 +157,7 @@ public class PluginMain {
                 for (Descriptors.FieldDescriptor field : m.getInputType().getFields()) {
                     if (field.getName().equals(parameterName)){
                         if (parameterList.length()!=0){
-                            parameterList.append(", ");
+                            parameterList.append(",");
                         }
                         parameterList.append(field.getType().getJavaType().toString().toLowerCase()).append(" ").append(field.getName());
                     }
@@ -131,10 +165,10 @@ public class PluginMain {
             }
         }
         if(parameterList.length()!=0){
-            parameterList.append(", ");
+            parameterList.append(",");
         }
-        parameterList.append(m.getInputType().getName()).append(" ").append(m.getInputType().getName().toLowerCase());
-        return String.format("    %s %s ( %s );\n", m.getOutputType().getName(), m.getName(), parameterList) + "\n";
+        parameterList.append(toPascalCase(m.getInputType().getName())).append(" ").append(m.getInputType().getName().toLowerCase());
+        return String.valueOf(parameterList);
     }
 
     private static String genAutowired(Descriptors.ServiceDescriptor services){

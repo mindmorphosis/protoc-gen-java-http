@@ -11,12 +11,12 @@ service b{
   }
   rpc function2 (Ping) returns (Pong) {
     option(google.api.http) = {
-      put: "/ping22"
+      put: "/{aaa}"
     };
   }
   rpc function3 (Ping) returns (Pong) {
     option(google.api.http) = {
-      delete: "/{aaa}"
+      delete: "/{aaa}/{bbb}"
     };
   }
 }
@@ -28,5 +28,5 @@ message Ping {
 }
 
 message Pong {
-  int32 name2 = 1;
+  string name1 = 1;
 }
