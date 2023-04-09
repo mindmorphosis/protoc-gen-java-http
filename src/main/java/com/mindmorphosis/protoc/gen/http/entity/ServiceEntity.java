@@ -1,6 +1,7 @@
 package com.mindmorphosis.protoc.gen.http.entity;
 
 import com.mindmorphosis.protoc.gen.http.Template;
+import com.mindmorphosis.protoc.gen.http.util.StringUtil;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,7 +40,7 @@ public class ServiceEntity {
         List<String> methodContentLine = new LinkedList<>();
         methods.forEach(method -> {
             // 如果是同一个proto文件生成的类型则直接import后使用短类型名
-            String inputParameterName = method.getInputClassFullName();
+            String inputClassname = method.getInputClassFullName();
             int inputLastIndex = method.getInputClassFullName().lastIndexOf(".");
             if (inputLastIndex != -1) {
                 int packIndex = method.getInputClassFullName().lastIndexOf(".", inputLastIndex - 1);
@@ -47,12 +48,16 @@ public class ServiceEntity {
                         method.getInputClassFullName() : method.getInputClassFullName().substring(0, packIndex);
                 if (inputClassPrefix.equals(pack)) {
                     importContentLine.add(String.format(Template.IMPORT, method.getInputClassFullName()));
-                    inputParameterName = method.getInputClassFullName().substring(inputLastIndex + 1);
+                    inputClassname = method.getInputClassFullName().substring(inputLastIndex + 1);
                 }
             }
 
+            int index = inputClassname.lastIndexOf(".");
+            String inputParameterName = (index == -1) ?
+                    StringUtil.toCamelCase(inputClassname) : StringUtil.toCamelCase(inputClassname.substring(index + 1));
+
             // 同上
-            String outputParameterName = method.getOutputClassFullName();
+            String outputClassname = method.getOutputClassFullName();
             int outputLastIndex = method.getOutputClassFullName().lastIndexOf(".");
             if (outputLastIndex != -1) {
                 int packIndex = method.getOutputClassFullName().lastIndexOf(".", outputLastIndex - 1);
@@ -60,16 +65,16 @@ public class ServiceEntity {
                         method.getOutputClassFullName() : method.getOutputClassFullName().substring(0, packIndex);
                 if (outputClassPrefix.equals(pack)) {
                     importContentLine.add(String.format(Template.IMPORT, method.getOutputClassFullName()));
-                    outputParameterName = method.getOutputClassFullName().substring(outputLastIndex + 1);
+                    outputClassname = method.getOutputClassFullName().substring(outputLastIndex + 1);
                 }
             }
 
             methodContentLine.add(String.format(
                     Template.SERVICE_METHOD,
-                    outputParameterName,
+                    outputClassname,
                     method.getMethodName(),
-                    inputParameterName + " " + inputParameterName
-                    ));
+                    inputClassname + " " + inputParameterName
+            ));
             methodContentLine.add("");
         });
         String classContent = methodContentLine.stream().map(s -> "    " + s).collect(Collectors.joining("\n"));
