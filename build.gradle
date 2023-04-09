@@ -31,9 +31,14 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-java:3.20.3'
     implementation group: 'com.google.http-client', name: 'google-http-client', version: '1.43.1'
     implementation group: 'com.google.api.grpc', name: 'grpc-google-common-protos', version: '2.14.3'
-
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
 }
 
 test {
     useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }

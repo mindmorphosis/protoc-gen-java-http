@@ -1,32 +1,81 @@
 syntax = "proto3";
 
-package my_package;
+package thjam.api.passport.v1;
+
 import "google/api/annotations.proto";
+//import "google/protobuf/empty.proto";
 
-service b{
-  rpc function1 (Ping) returns (Pong) {
+option java_package = "com.thjam.api.passport.v1";
+option java_outer_classname = "Passport";
+
+service PassportService {
+
+  // 账户登录 & 续签jwt
+  rpc Login(LoginRequest) returns (LoginReply) {
     option(google.api.http) = {
-      get: "/ping11"
+      post: "/web/v1/user/login"
+      body: "*"
     };
   }
-  rpc function2 (Ping) returns (Pong) {
+
+  // 创建账户
+  rpc CreateAccount (CreateAccountRequest) returns (LoginReply) {
     option(google.api.http) = {
-      put: "/{aaa}"
+      post: "/web/v1/user"
+      body: "*"
     };
   }
-  rpc function3 (Ping) returns (Pong) {
+
+  // 登出
+  rpc Logout(LoginReply) returns (LoginReply) {
     option(google.api.http) = {
-      delete: "/{aaa}/{bbb}"
+      post: "/web/v1/user/logout"
+      body: "*"
+    };
+  }
+
+  // 修改密码
+  rpc ChangePassword(ChangePasswordRequest) returns (LoginReply) {
+    option(google.api.http) = {
+      put: "/web/v1/user/password"
+      body: "*"
+    };
+  }
+
+  // 修改用户信息
+  rpc ChangeUser(User) returns (LoginReply) {
+    option(google.api.http) = {
+      get: "/web/v1/users/{id}"
     };
   }
 }
 
-message Ping {
-  int32 aaa = 1;
-  int32 name1 = 2;
-  int32 bbb = 3;
+message User {
+  uint32 id = 1;    // user-id
+  string token = 2; // JWT
+  string username = 3;
+  string bio = 4;   // 简介
+  string image = 5; // 头像
 }
 
-message Pong {
-  string name1 = 1;
+// 登录请求
+message LoginRequest {
+  string email = 1 ;
+  string password = 2;
+}
+// 登录返回
+message LoginReply {
+  User user = 1;
+}
+
+// 建账户请求
+message CreateAccountRequest {
+  string email = 1 ;
+  string password = 2;
+}
+
+// 修改密码请求
+message ChangePasswordRequest {
+  string oldPassword = 1;
+  string newPassword = 2;
 }

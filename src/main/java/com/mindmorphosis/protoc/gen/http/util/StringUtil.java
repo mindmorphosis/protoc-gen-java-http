@@ -1,6 +1,13 @@
-package com.mindmorphosis.protoc.gen.http.StringUtil;
+package com.mindmorphosis.protoc.gen.http.util;
 
 public class StringUtil {
+
+    /**
+     * 将字符串转换为大驼峰
+     *
+     * @param input
+     * @return
+     */
     public static String toPascalCase(String input) {
         if (input == null || input.isEmpty()) {
             return input;
@@ -19,6 +26,12 @@ public class StringUtil {
         return pascalCase.toString();
     }
 
+    /**
+     * 将字符串转换为小驼峰
+     *
+     * @param input
+     * @return
+     */
     public static String toCamelCase(String input) {
         if (input == null || input.isEmpty()) {
             return input;
