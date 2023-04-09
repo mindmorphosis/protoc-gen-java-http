@@ -133,8 +133,8 @@ public class PluginMain {
 
         ControllerMethodEntity methodEntity = new ControllerMethodEntity();
         String classPrefix = pack + "." + protoEntityClassname;
-        String inputClassFullName = getTypeClassname(method.getInputType(), classPrefix);
-        String outputClassFullName = getTypeClassname(method.getOutputType(), classPrefix);
+        String inputClassFullName = getTypeClassname(method.getInputType(), pack, classPrefix);
+        String outputClassFullName = getTypeClassname(method.getOutputType(), pack, classPrefix);
 
         methodEntity.setMethodName(StringUtil.toCamelCase(method.getName()));
         methodEntity.setServiceName(StringUtil.toCamelCase(protoEntityClassname + "Service"));
@@ -248,7 +248,7 @@ public class PluginMain {
                 case STRING -> "String";
                 case BYTE_STRING -> "com.google.protobuf.ByteString";
                 case MESSAGE, ENUM -> {
-                    if (isImportType(field.getFile())) {
+                    if (isImportType(field.getFile(), pack)) {
                         // 获取消息类型所在的包名
                         String packageName = field.getMessageType().getFile().getOptions().getJavaPackage();
                         packageName = (Strings.isNullOrEmpty(packageName)) ?
@@ -267,8 +267,8 @@ public class PluginMain {
         return urlParameters;
     }
 
-    public static String getTypeClassname(Descriptors.Descriptor type, String classPrefix) {
-        if (isImportType(type.getFile())) {
+    public static String getTypeClassname(Descriptors.Descriptor type, String pack, String classPrefix) {
+        if (isImportType(type.getFile(), pack)) {
             // 获取消息类型所在的包名
             String packageName = type.getFile().getOptions().getJavaPackage();
             packageName = (Strings.isNullOrEmpty(packageName)) ? type.getFile().getPackage() : packageName;
@@ -281,27 +281,33 @@ public class PluginMain {
         return classPrefix + "." + StringUtil.toPascalCase(type.getName());
     }
 
-    public static boolean isImportType(Descriptors.FileDescriptor file) {
-        boolean isImported = false;
-        String fileName = file.getName(); // 获取字段所在的 .proto 文件名
-        for (String dependency : file.toProto().getDependencyList()) {
-            if (dependency.endsWith(fileName)) {
-                isImported = true;
-                break;
-            }
-        }
-        return isImported;
+    public static boolean isImportType(Descriptors.FileDescriptor file, String pack) {
+        return !pack.equals(file.getOptions().getJavaPackage());
     }
 
     private static Descriptors.FileDescriptor getFileDescriptor(
             PluginProtos.CodeGeneratorRequest request, String fileToGenerate)
             throws Descriptors.DescriptorValidationException {
 
+        // 创建一个映射来存储已创建的 FileDescriptors
+        Map<String, Descriptors.FileDescriptor> fileDescriptorMap = new HashMap<>();
+
+        // 遍历请求中的所有 FileDescriptorProtos
         for (DescriptorProtos.FileDescriptorProto fileDescriptorProto : request.getProtoFileList()) {
+            // 为每个 FileDescriptorProto 创建一个 FileDescriptor
+            Descriptors.FileDescriptor fileDescriptor = Descriptors.FileDescriptor.buildFrom(fileDescriptorProto,
+                    fileDescriptorMap.values().toArray(new Descriptors.FileDescriptor[0]));
+
+            // 将创建的 FileDescriptor 添加到映射中
+            fileDescriptorMap.put(fileDescriptorProto.getName(), fileDescriptor);
+
+            // 如果找到了要生成的文件，返回对应的 FileDescriptor
             if (fileDescriptorProto.getName().equals(fileToGenerate)) {
-                return Descriptors.FileDescriptor.buildFrom(fileDescriptorProto, new Descriptors.FileDescriptor[0]);
+                return fileDescriptor;
             }
         }
+
+        // 如果没有找到对应的文件，返回 null
         return null;
     }
 }
