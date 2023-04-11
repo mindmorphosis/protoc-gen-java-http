@@ -83,41 +83,48 @@ public class ControllerMethodEntity {
                     Template.ANNOTATIONS_PATH_VARIABLE, urlParameter, urlClassname, urlParameter + "_"));
         });
         String bodyContent = "";
-        if (hasBody) {
+        if (hasBody && !bodyClassFullName.equals("com.google.protobuf.Empty")) {
             bodyContent = String.format(Template.ANNOTATIONS_REQUEST_BODY, bodyClassFullName, "_" + bodyParameterName);
             controllerParameters.add(bodyContent);
         }
         String fullParameter = String.join(", ", controllerParameters);
 
         List<String> methodContentLine = new LinkedList<>();
-
-        if (httpEntity.getParameters().isEmpty()) {
-            // 没有url参数
+        if (hasBody && bodyClassFullName.equals("com.google.protobuf.Empty")){
             methodContentLine.add(String.format(
-                    Template.CONTROLLER_RETURN,
+                    Template.CONTROLLER_VOID,
                     "__" + serviceName,
-                    methodName,
-                    // 有body时service(传入body), 没有body时service()
-                    (hasBody) ? "_" + bodyParameterName : ""));
-        } else {
-            // 有url参数
-            methodContentLine.add(String.format(
-                    // 有body时body.toBuilder(), 没有body时class.newBuilder()
-                    "%s _input = %s.%sBuilder()",
-                    inputClassFullName,
-                    (hasBody) ? "_" + bodyParameterName : inputClassFullName,
-                    (hasBody) ? "to" : "new"));
-            httpEntity.getParameters().forEach((urlParameter, urlClassname) -> {
+                    methodName));
+        }else{
+            if (httpEntity.getParameters().isEmpty()) {
+                // 没有url参数
                 methodContentLine.add(String.format(
-                        "        .set%s(%s_)", StringUtil.toPascalCase(urlParameter), urlParameter));
-            });
-            methodContentLine.add("        .build();");
-            methodContentLine.add(String.format(
-                    Template.CONTROLLER_RETURN,
-                    "__" + serviceName,
-                    methodName,
-                    "_input"));
+                        Template.CONTROLLER_RETURN,
+                        "__" + serviceName,
+                        methodName,
+                        // 有body时service(传入body), 没有body时service()
+                        (hasBody) ? "_" + bodyParameterName : ""));
+            } else {
+                // 有url参数
+                methodContentLine.add(String.format(
+                        // 有body时body.toBuilder(), 没有body时class.newBuilder()
+                        "%s _input = %s.%sBuilder()",
+                        inputClassFullName,
+                        (hasBody) ? "_" + bodyParameterName : inputClassFullName,
+                        (hasBody) ? "to" : "new"));
+                httpEntity.getParameters().forEach((urlParameter, urlClassname) -> {
+                    methodContentLine.add(String.format(
+                            "        .set%s(%s_)", StringUtil.toPascalCase(urlParameter), urlParameter));
+                });
+                methodContentLine.add("        .build();");
+                methodContentLine.add(String.format(
+                        Template.CONTROLLER_RETURN,
+                        "__" + serviceName,
+                        methodName,
+                        "_input"));
+            }
         }
+
 
         String methodContent = methodContentLine.stream().map(s -> "    " + s).collect(Collectors.joining("\n"));
 
