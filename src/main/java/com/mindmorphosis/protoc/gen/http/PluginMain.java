@@ -139,7 +139,11 @@ public class PluginMain {
         methodEntity.setMethodName(StringUtil.toCamelCase(method.getName()));
         methodEntity.setServiceName(StringUtil.toCamelCase(protoEntityClassname + "Service"));
         methodEntity.setInputClassFullName(inputClassFullName);
-        methodEntity.setOutputClassFullName(outputClassFullName);
+        if (outputClassFullName.equals("com.google.protobuf.Empty")){
+            methodEntity.setOutputClassFullName("void");
+        }else{
+            methodEntity.setOutputClassFullName(outputClassFullName);
+        }
         methodEntity.setHttpEntity(buildHttp(method, pack));
 
         if (!bodyType.isBlank()) {

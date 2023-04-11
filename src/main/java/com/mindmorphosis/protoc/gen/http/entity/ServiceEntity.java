@@ -41,31 +41,40 @@ public class ServiceEntity {
         methods.forEach(method -> {
             // 如果是同一个proto文件生成的类型则直接import后使用短类型名
             String inputClassname = method.getInputClassFullName();
-            int inputLastIndex = method.getInputClassFullName().lastIndexOf(".");
-            if (inputLastIndex != -1) {
-                int packIndex = method.getInputClassFullName().lastIndexOf(".", inputLastIndex - 1);
-                String inputClassPrefix = (packIndex == -1) ?
-                        method.getInputClassFullName() : method.getInputClassFullName().substring(0, packIndex);
-                if (inputClassPrefix.equals(pack)) {
-                    importContentLine.add(String.format(Template.IMPORT, method.getInputClassFullName()));
-                    inputClassname = method.getInputClassFullName().substring(inputLastIndex + 1);
+            String inputParameterName = "";
+            if(inputClassname.equals("com.google.protobuf.Empty")){
+                inputClassname = "";
+            }else {
+                int inputLastIndex = method.getInputClassFullName().lastIndexOf(".");
+                if (inputLastIndex != -1) {
+                    int packIndex = method.getInputClassFullName().lastIndexOf(".", inputLastIndex - 1);
+                    String inputClassPrefix = (packIndex == -1) ?
+                            method.getInputClassFullName() : method.getInputClassFullName().substring(0, packIndex);
+                    if (inputClassPrefix.equals(pack)) {
+                        importContentLine.add(String.format(Template.IMPORT, method.getInputClassFullName()));
+                        inputClassname = method.getInputClassFullName().substring(inputLastIndex + 1);
+                    }
                 }
+                int index = inputClassname.lastIndexOf(".");
+                inputParameterName = (index == -1) ?
+                        StringUtil.toCamelCase(inputClassname) : StringUtil.toCamelCase(inputClassname.substring(index + 1));
             }
 
-            int index = inputClassname.lastIndexOf(".");
-            String inputParameterName = (index == -1) ?
-                    StringUtil.toCamelCase(inputClassname) : StringUtil.toCamelCase(inputClassname.substring(index + 1));
 
             // 同上
             String outputClassname = method.getOutputClassFullName();
-            int outputLastIndex = method.getOutputClassFullName().lastIndexOf(".");
-            if (outputLastIndex != -1) {
-                int packIndex = method.getOutputClassFullName().lastIndexOf(".", outputLastIndex - 1);
-                String outputClassPrefix = (packIndex == -1) ?
-                        method.getOutputClassFullName() : method.getOutputClassFullName().substring(0, packIndex);
-                if (outputClassPrefix.equals(pack)) {
-                    importContentLine.add(String.format(Template.IMPORT, method.getOutputClassFullName()));
-                    outputClassname = method.getOutputClassFullName().substring(outputLastIndex + 1);
+            if (outputClassname.equals("com.google.protobuf.Empty")){
+                outputClassname = "void";
+            }else{
+                int outputLastIndex = method.getOutputClassFullName().lastIndexOf(".");
+                if (outputLastIndex != -1) {
+                    int packIndex = method.getOutputClassFullName().lastIndexOf(".", outputLastIndex - 1);
+                    String outputClassPrefix = (packIndex == -1) ?
+                            method.getOutputClassFullName() : method.getOutputClassFullName().substring(0, packIndex);
+                    if (outputClassPrefix.equals(pack)) {
+                        importContentLine.add(String.format(Template.IMPORT, method.getOutputClassFullName()));
+                        outputClassname = method.getOutputClassFullName().substring(outputLastIndex + 1);
+                    }
                 }
             }
 
@@ -73,7 +82,7 @@ public class ServiceEntity {
                     Template.SERVICE_METHOD,
                     outputClassname,
                     method.getMethodName(),
-                    inputClassname + " " + inputParameterName
+                    inputClassname + (inputClassname.isEmpty()?"":" ") + inputParameterName
             ));
             methodContentLine.add("");
         });
