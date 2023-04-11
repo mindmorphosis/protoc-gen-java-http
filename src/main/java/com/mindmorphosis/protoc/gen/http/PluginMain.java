@@ -20,6 +20,8 @@ import com.mindmorphosis.protoc.gen.http.entity.HttpEntity;
 import com.mindmorphosis.protoc.gen.http.entity.ServiceEntity;
 import com.mindmorphosis.protoc.gen.http.util.StringUtil;
 
+import static com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse.Feature.FEATURE_PROTO3_OPTIONAL_VALUE;
+
 public class PluginMain {
     public static void main(String[] args) throws IOException, Descriptors.DescriptorValidationException {
         ExtensionRegistry extensionRegistry = ExtensionRegistry.newInstance();
@@ -53,6 +55,7 @@ public class PluginMain {
                                           ControllerEntity controllerEntity) throws IOException {
 
         PluginProtos.CodeGeneratorResponse.Builder responseBuilder = PluginProtos.CodeGeneratorResponse.newBuilder();
+        responseBuilder.setSupportedFeatures(FEATURE_PROTO3_OPTIONAL_VALUE);
         PluginProtos.CodeGeneratorResponse.File.Builder fileBuilder = PluginProtos.CodeGeneratorResponse.File.newBuilder()
                 .setName(pack.replace(".", File.separator) +
                         File.separator +
@@ -70,6 +73,7 @@ public class PluginMain {
                                        ServiceEntity serviceEntity) throws IOException {
 
         PluginProtos.CodeGeneratorResponse.Builder responseBuilder = PluginProtos.CodeGeneratorResponse.newBuilder();
+        responseBuilder.setSupportedFeatures(FEATURE_PROTO3_OPTIONAL_VALUE);
         PluginProtos.CodeGeneratorResponse.File.Builder fileBuilder = PluginProtos.CodeGeneratorResponse.File.newBuilder()
                 .setName(pack.replace(".", File.separator) +
                         File.separator +
