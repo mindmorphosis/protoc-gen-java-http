@@ -139,16 +139,12 @@ public class PluginMain {
         methodEntity.setMethodName(StringUtil.toCamelCase(method.getName()));
         methodEntity.setServiceName(StringUtil.toCamelCase(protoEntityClassname + "Service"));
         methodEntity.setInputClassFullName(inputClassFullName);
-        if (outputClassFullName.equals("com.google.protobuf.Empty")){
-            methodEntity.setOutputClassFullName("void");
-        }else{
-            methodEntity.setOutputClassFullName(outputClassFullName);
-        }
+        methodEntity.setOutputClassFullName(outputClassFullName);
         methodEntity.setHttpEntity(buildHttp(method, pack));
 
         if (!bodyType.isBlank()) {
             if (bodyType.equals("*")) {
-                methodEntity.setBody(inputClassFullName);
+                methodEntity.setBody(inputClassFullName, bodyType);
             } else {
                 List<Descriptors.FieldDescriptor> fields = method.getInputType().getFields();
                 for (Descriptors.FieldDescriptor field : fields) {
@@ -157,7 +153,8 @@ public class PluginMain {
                     }
                     if (field.getName().equals(bodyType)) {
                         methodEntity.setBody(
-                                String.join(".", classPrefix, StringUtil.toPascalCase(field.getName())),
+                                String.join(".", classPrefix, StringUtil.toPascalCase(field.getMessageType().getName())),
+                                bodyType,
                                 StringUtil.toCamelCase(field.getName())
                         );
                         break;

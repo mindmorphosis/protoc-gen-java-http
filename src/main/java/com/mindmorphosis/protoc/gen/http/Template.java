@@ -43,7 +43,6 @@ public class Template {
 
     public static final String ANNOTATIONS_REQUEST_BODY = "@RequestBody %s %s";
 
-    public static final String CONTROLLER_RETURN = "return %s.%s(%s);";
+    public static final String CONTROLLER_RETURN = "%s%s.%s(%s);"; // return %s.%s(%s);
 
-    public static final String CONTROLLER_VOID = "%s.%s();";
 }
