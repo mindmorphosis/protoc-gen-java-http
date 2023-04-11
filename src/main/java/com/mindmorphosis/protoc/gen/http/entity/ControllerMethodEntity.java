@@ -138,7 +138,7 @@ public class ControllerMethodEntity {
                 hasServiceOutput ? "return " : "",
                 "__" + serviceName,
                 methodName,
-                inputParameterName));
+                hasServiceInput ? inputParameterName : ""));
 
         String methodContent = methodContentLine.stream().map(s -> "    " + s).collect(Collectors.joining("\n"));
 
