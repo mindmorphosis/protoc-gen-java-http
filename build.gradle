@@ -42,3 +42,26 @@ test {
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
+
+
+// 构建proto文件
+tasks.register('generateProto', Exec) {
+    doFirst {
+        def thirdPartyProtoPath = './src/third_party/'
+        def outputJavaPath = './src/main/java'
+
+        // 设置命令和参数
+        def commandArg = ['cmd', '/c', 'protoc',
+                '--proto_path=.',
+                "--proto_path=${thirdPartyProtoPath}",
+                "--plugin=protoc-gen-java-http=.\\bin\\protoc-gen-java-http.bat",
+                "--java_out=${outputJavaPath}",
+                "--java-http_out=${outputJavaPath}",
+                "t.proto"
+        ]
+
+        println "Executing command: ${commandArg.join(' ')}"
+
+        commandLine commandArg
+    }
+}
