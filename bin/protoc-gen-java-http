@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+classpath=""
+for f in "$(dirname "$0")/../lib/"*.jar; do
+    classpath="$classpath:$f"
+done
+
+java -classpath "${classpath}" com.mindmorphosis.protoc.gen.http.PluginMain "$@"
